@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ulid_tool"
+authors = [
+    {name = "Adrian F. Hoefflin", email = "srccircumflex@outlook.com"},
+]
+description = "Minimalistic implementation of the ULID specification for python (https://github.com/ulid/spec). No integrated type or specification checks but system integrity check."
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = [
+    "ulid"
+]
+license = {text = "MIT License"}
+classifiers = [
+    "Development Status :: 7 - Inactive",
+    "Intended Audience :: Developers",
+    "Topic :: Security :: Cryptography",
+]
+dependencies = [
+]
+dynamic = ["version"]
+
+[tool.setuptools.dynamic]
+version = {attr = "ulid_tool.__version__"}
+
+[project.urls]
+Repository = "https://github.com/srccircumflex/ulid_tool"
