@@ -94,6 +94,10 @@ class TestULID(unittest.TestCase):
     def test_ulidrandomness(self, randomness=ulid.ULIDRandomness()):
         self._test_interface(self._test_interface(randomness))
 
+    def test_counters(self):
+        self.assertEqual(ulid.ULID.runtime_lexical().randomness.int + 1, ulid.ULID.runtime_lexical().randomness.int)
+        self.assertEqual(ulid.ULID.local_lexical().randomness.int + 1, ulid.ULID.local_lexical().randomness.int)
+
 
 if __name__ == '__main__':
     unittest.main()

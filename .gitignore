@@ -169,3 +169,4 @@ cython_debug/
 dev/
 
 database.db
+/src/ulid_tool/utils/.lexical_rand.cache

@@ -11,6 +11,7 @@ except ImportError:
 from ..utils import time_ms
 from ..utils import _randb
 from ..utils import base32
+from ..utils import lexical_rand
 from ..utils.baseinterface import _Interface
 
 
@@ -213,6 +214,20 @@ class ULIDRandomness(_ULIDInterface):
     def __init__(self):
         self.prime = _randb(10)
 
+    @classmethod
+    def runtime_lexical(cls):
+        """Next value of the monotonic runtime counter."""
+        new = cls.__new__(cls)
+        new.int = lexical_rand.runtime_next()
+        return new
+
+    @classmethod
+    def local_lexical(cls):
+        """Next value of the monotonic local counter."""
+        new = cls.__new__(cls)
+        new.int = lexical_rand.local_next()
+        return new
+
 
 class ULID(_ULIDInterface):
 
@@ -279,6 +294,14 @@ class ULID(_ULIDInterface):
         new.timestamp = timestamp
         new.randomness = randomness
         return new
+
+    @classmethod
+    def runtime_lexical(cls):
+        return cls.from_interfaces(ULIDTimestamp(), ULIDRandomness.runtime_lexical())
+
+    @classmethod
+    def local_lexical(cls):
+        return cls.from_interfaces(ULIDTimestamp(), ULIDRandomness.local_lexical())
 
 
 MIN_TIMESTAMP: ULIDTimestamp = ULIDTimestamp.from_bytes(b'\x00\x00\x00\x00\x00\x00')  # 0

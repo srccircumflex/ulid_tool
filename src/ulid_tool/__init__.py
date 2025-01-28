@@ -1,4 +1,4 @@
-__version__ = "1"
+__version__ = "2"
 
 
 SYSTEM_CHECKS: bool = True
