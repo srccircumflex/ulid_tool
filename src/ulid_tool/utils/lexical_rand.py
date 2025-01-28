@@ -22,21 +22,23 @@ def __runtime_gen():
 def __local_gen():
     try:
         with open(LOCAL_FILE) as f:
-            i = int(f.read()) + 1
+            li = i = int(f.read())
     except Exception:
-        i = 0
+        li = i = 0
 
     def _atexit_():
         with open(LOCAL_FILE, "w") as f:
-            f.write(str(i))
+            f.write(str(li))
 
     atexit.register(_atexit_)
 
-    for i in range(i, MAX_RAND + 1):
+    for i in range(i + 1, MAX_RAND + 1):
+        li = i
         yield i
 
     while True:
         for i in range(MAX_RAND + 1):
+            li = i
             yield i
 
 
