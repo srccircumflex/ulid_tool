@@ -228,6 +228,13 @@ class ULIDRandomness(_ULIDInterface):
         new.int = lexical_rand.local_next()
         return new
 
+    @classmethod
+    def env_lexical(cls):
+        """Next value of the monotonic env counter."""
+        new = cls.__new__(cls)
+        new.int = lexical_rand.env_next()
+        return new
+
 
 class ULID(_ULIDInterface):
 
@@ -297,11 +304,24 @@ class ULID(_ULIDInterface):
 
     @classmethod
     def runtime_lexical(cls):
+        """Creates the random part using a monotonic counter that starts from 0 for each runtime.
+        **(not thread save)**"""
         return cls.from_interfaces(ULIDTimestamp(), ULIDRandomness.runtime_lexical())
 
     @classmethod
     def local_lexical(cls):
+        """Creates the random part with a monotonic counter that reads the last state from a local file.
+        The new state is saved after the interpreter has finished.
+        **(not thread save)**"""
         return cls.from_interfaces(ULIDTimestamp(), ULIDRandomness.local_lexical())
+
+    @classmethod
+    def env_lexical(cls):
+        """Creates the random part using two monotonic counters.
+        The last 8 bits of the random part are set by a counter that reads the last status for each runtime and saves it directly (env id).
+        The rest is set analogous to the runtime counter.
+        **(thread safe up to 255 simultaneous threads)**"""
+        return cls.from_interfaces(ULIDTimestamp(), ULIDRandomness.env_lexical())
 
 
 MIN_TIMESTAMP: ULIDTimestamp = ULIDTimestamp.from_bytes(b'\x00\x00\x00\x00\x00\x00')  # 0

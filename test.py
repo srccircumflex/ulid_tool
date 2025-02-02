@@ -97,6 +97,7 @@ class TestULID(unittest.TestCase):
     def test_counters(self):
         self.assertEqual(ulid.ULID.runtime_lexical().randomness.int + 1, ulid.ULID.runtime_lexical().randomness.int)
         self.assertEqual(ulid.ULID.local_lexical().randomness.int + 1, ulid.ULID.local_lexical().randomness.int)
+        self.assertEqual((ulid.ULID.env_lexical().randomness.int >> 8) + 1, (ulid.ULID.env_lexical().randomness.int >> 8))
 
 
 if __name__ == '__main__':
