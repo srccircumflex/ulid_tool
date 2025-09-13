@@ -173,3 +173,4 @@ dev/
 /src/ulid_tool/utils/.lexical_env.cache
 /src/ulid_tool/utils/.thread_env.cache
 /src/ulid_tool/utils/.short_env.cache
+/src/ulid_tool/utils/.slid_env.cache
