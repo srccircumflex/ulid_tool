@@ -1,3 +1,7 @@
+```console
+python3 -m pip install ulid_tool --upgrade
+```
+
 # Tool for Unique Lexicographically Identifier (ULID)
 
 ### [Original title] Unique Lexicographically Sortable Identifier
@@ -98,7 +102,7 @@ Similar to runtime_lexical. Reads the last status of the counter from the file s
 
 _**ULID.env_lexical**_
 
-Here, the random part consists of 72 bits of a monotonic counter + 8 bits from a one-time read ID per interpreter start.
+Here, the random part consists of 8 bits from a one-time read ID per interpreter start + 72 bits of a monotonic counter.
 **Not sub-thread or sub-process safe.** However, for up to 256 simultaneously running main processes.
 
 
@@ -111,8 +115,8 @@ Structured like env_lexical. Here, the thread ID is used for system-wide uniquen
 _**ULID.short_env_lexical**_
 
 Heavily modified version. The random part consists of only 8 bits. 
-4 bits from a monotonic counter + 4 bits from a uniquely read ID per 
-interpreter start.
+4 bits from a uniquely read ID per 
+interpreter start + 4 bits from a monotonic counter.
 **Not sub-thread or sub-process safe.** However, for up to 16 simultaneously running main processes.
 
 

@@ -343,32 +343,32 @@ class ULID(_ULIDInterface):
     @classmethod
     def env_lexical(cls):
         """Creates the random part using two monotonic counters.
-        The last 8 bits of the random part are set by a counter that reads the last status for each runtime and saves it directly (env id).
+        The first 8 bits of the random part are set by a counter that reads the last status for each runtime and saves it directly (env id).
         The rest is set analogous to the runtime counter.
         **(thread safe up to 255 simultaneous INDEPENDENT threads)**
 
-        ``[TIMESTAMP(48bit|6bytes)][COUNTER(72bit|9bytes)][ENV-ID(8bit|1byte)]``"""
+        ``[TIMESTAMP(48bit|6bytes)][ENV-ID(8bit|1byte)][COUNTER(72bit|9bytes)]``"""
         return cls.from_interfaces(ULIDTimestamp(), ULIDRandomness.env_lexical())
 
     @classmethod
     def thread_env_lexical(cls):
         """Creates the random part using two monotonic counters.
-        The last 8 bits of the random part are set by a counter that reads the last status for each tread identifier and saves it directly.
+        The first 8 bits of the random part are set by a counter that reads the last status for each tread identifier and saves it directly.
         The rest is set analogous to the runtime counter.
         **(thread safe up to 255 simultaneous [sub]threads or [sub]processes)**
 
-        ``[TIMESTAMP(48bit|6bytes)][COUNTER(72bit|9bytes)][ENV-ID(8bit|1byte)]``"""
+        ``[TIMESTAMP(48bit|6bytes)][ENV-ID(8bit|1byte)][COUNTER(72bit|9bytes)]``"""
         return cls.from_interfaces(ULIDTimestamp(), ULIDRandomness.thread_env_lexical())
 
     @classmethod
     def short_env_lexical(cls):
         """**SHORT VERSION (not compatible with the origin specification, backward compatibility not implemented)**
 
-        Creates the random part using two monotonic counters.
-        The last 8 bits consist of half an environment counter and half a call counter.
+        Replaces the random part with a short counter (8bit|1byte).
+        The short environment counter consists of half an environment counter and half a call counter.
         **(thread safe up to 16 simultaneous INDEPENDENT threads)**
 
-        ``[TIMESTAMP(48bit|6bytes)][COUNTER(4bit|.5byte)][ENV-ID(4bit|.5byte)]``"""
+        ``[TIMESTAMP(48bit|6bytes)][ENV-ID(4bit|.5byte)][COUNTER(4bit|.5byte)]``"""
         return cls.from_interfaces(ULIDTimestamp(), ULIDRandomness.short_env_lexical())
 
 

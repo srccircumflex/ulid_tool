@@ -33,7 +33,7 @@ __lock__ = filelock.FileLock(ENV_LOCK_FILE)
 
 
 def __env_gen():
-    # [COUNTER(72bit)][ENV-ID(8bit)]
+    # [ENV-ID(8bit)][COUNTER(72bit)]
     with __lock__:
         try:
             with open(ENV_FILE, "r+") as f:
@@ -47,13 +47,14 @@ def __env_gen():
             env_id = 0
             with open(ENV_FILE, "w") as f:
                 f.write("0")
+    env_id <<= 72
     while True:
         for i in range(MAX_ENV_RAND + 1):
-            yield (i << 8) | env_id
+            yield env_id | i
 
 
 def __t_env_gen():
-    # [COUNTER(72bit)][ENV-ID(8bit)]
+    # [ENV-ID(8bit)][COUNTER(72bit)]
     with __lock__:
         try:
             with open(T_ENV_FILE, "r+") as f:
@@ -67,13 +68,14 @@ def __t_env_gen():
             env_id = 0
             with open(T_ENV_FILE, "w") as f:
                 f.write("0")
+    env_id <<= 72
     while True:
         for i in range(MAX_ENV_RAND + 1):
-            yield (i << 8) | env_id
+            yield env_id | i
 
 
 def __s_env_gen():
-    # [COUNTER(4bit)][ENV-ID(4bit)]
+    # [ENV-ID(4bit)][COUNTER(4bit)]
     with __lock__:
         try:
             with open(S_ENV_FILE, "r+") as f:
@@ -87,9 +89,10 @@ def __s_env_gen():
             s_env_id = 0
             with open(S_ENV_FILE, "w") as f:
                 f.write("0")
+    s_env_id <<= 4
     while True:
         for i in range(MAX_S_ENV_RAND + 1):
-            yield (i << 4) | s_env_id
+            yield s_env_id | i
 
 
 def __runtime_gen():
@@ -138,7 +141,7 @@ def local_next() -> int:
 
 
 def env_next() -> int:
-    """``[COUNTER(72bit)][ENV-ID(8bit)]``"""
+    """``[ENV-ID(8bit)][COUNTER(72bit)]``"""
     return next(__env_gen__)
 
 
@@ -146,7 +149,7 @@ __t_env_gens__ = dict()
 
 
 def thread_env_next() -> int:
-    """``[COUNTER(72bit)][ENV-ID(8bit)]``"""
+    """``[ENV-ID(8bit)][COUNTER(72bit)]``"""
     i = threading.get_ident()
     if not (gen := __t_env_gens__.get(i)):
         gen = __t_env_gen()
@@ -155,6 +158,6 @@ def thread_env_next() -> int:
 
 
 def short_env_next() -> int:
-    """``[COUNTER(4bit)][ENV-ID(4bit)]``"""
+    """``[ENV-ID(4bit)][COUNTER(4bit)]``"""
     return next(__s_env_gen__)
 
