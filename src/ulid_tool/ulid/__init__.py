@@ -107,10 +107,11 @@ class _ULIDInterface(_Interface):
 
 class ULIDTimestamp(_ULIDInterface):
     prime: _int
+    n: _int = 6
 
     @property
     def bytes(self) -> _bytes:
-        return self.prime.to_bytes(6, "big")
+        return self.prime.to_bytes(self.n, "big")
 
     @bytes.setter
     def bytes(self, val: _bytes):
@@ -194,6 +195,7 @@ class ULIDTimestamp(_ULIDInterface):
 
 class ULIDRandomness(_ULIDInterface):
     prime: _bytes
+    n: _int = 10
 
     @property
     def bytes(self) -> _bytes:
@@ -209,7 +211,7 @@ class ULIDRandomness(_ULIDInterface):
 
     @int.setter
     def int(self, val: _int):
-        self.prime = val.to_bytes(10, "big")
+        self.prime = val.to_bytes(self.n, "big")
 
     def __init__(self):
         self.prime = _randb(10)
@@ -235,6 +237,21 @@ class ULIDRandomness(_ULIDInterface):
         new.int = lexical_rand.env_next()
         return new
 
+    @classmethod
+    def thread_env_lexical(cls):
+        """Next value of the monotonic thread-env counter."""
+        new = cls.__new__(cls)
+        new.int = lexical_rand.thread_env_next()
+        return new
+
+    @classmethod
+    def short_env_lexical(cls):
+        """Next value of the monotonic short-env counter."""
+        new = cls.__new__(cls)
+        new.n = 1
+        new.int = lexical_rand.short_env_next()
+        return new
+
 
 class ULID(_ULIDInterface):
 
@@ -251,6 +268,10 @@ class ULID(_ULIDInterface):
     randomness: ULIDRandomness
 
     @property
+    def n(self) -> _int:
+        return self.timestamp.n + self.randomness.n
+
+    @property
     def bytes(self) -> _bytes:
         return self.timestamp.bytes + self.randomness.bytes
 
@@ -265,7 +286,7 @@ class ULID(_ULIDInterface):
 
     @int.setter
     def int(self, val: _int):
-        self.bytes = val.to_bytes(16, "big")
+        self.bytes = val.to_bytes(self.n, "big")
 
     @property
     def str(self) -> _str:
@@ -305,14 +326,18 @@ class ULID(_ULIDInterface):
     @classmethod
     def runtime_lexical(cls):
         """Creates the random part using a monotonic counter that starts from 0 for each runtime.
-        **(not thread save)**"""
+        **(not thread save)**
+
+        ``[TIMESTAMP(48bit|6bytes)][COUNTER(80bit|10bytes)]``"""
         return cls.from_interfaces(ULIDTimestamp(), ULIDRandomness.runtime_lexical())
 
     @classmethod
     def local_lexical(cls):
         """Creates the random part with a monotonic counter that reads the last state from a local file.
         The new state is saved after the interpreter has finished.
-        **(not thread save)**"""
+        **(not thread save)**
+
+        ``[TIMESTAMP(48bit|6bytes)][COUNTER(80bit|10bytes)]``"""
         return cls.from_interfaces(ULIDTimestamp(), ULIDRandomness.local_lexical())
 
     @classmethod
@@ -320,8 +345,31 @@ class ULID(_ULIDInterface):
         """Creates the random part using two monotonic counters.
         The last 8 bits of the random part are set by a counter that reads the last status for each runtime and saves it directly (env id).
         The rest is set analogous to the runtime counter.
-        **(thread safe up to 255 simultaneous threads)**"""
+        **(thread safe up to 255 simultaneous INDEPENDENT threads)**
+
+        ``[TIMESTAMP(48bit|6bytes)][COUNTER(72bit|9bytes)][ENV-ID(8bit|1byte)]``"""
         return cls.from_interfaces(ULIDTimestamp(), ULIDRandomness.env_lexical())
+
+    @classmethod
+    def thread_env_lexical(cls):
+        """Creates the random part using two monotonic counters.
+        The last 8 bits of the random part are set by a counter that reads the last status for each tread identifier and saves it directly.
+        The rest is set analogous to the runtime counter.
+        **(thread safe up to 255 simultaneous [sub]threads or [sub]processes)**
+
+        ``[TIMESTAMP(48bit|6bytes)][COUNTER(72bit|9bytes)][ENV-ID(8bit|1byte)]``"""
+        return cls.from_interfaces(ULIDTimestamp(), ULIDRandomness.thread_env_lexical())
+
+    @classmethod
+    def short_env_lexical(cls):
+        """**SHORT VERSION (not compatible with the origin specification, backward compatibility not implemented)**
+
+        Creates the random part using two monotonic counters.
+        The last 8 bits consist of half an environment counter and half a call counter.
+        **(thread safe up to 16 simultaneous INDEPENDENT threads)**
+
+        ``[TIMESTAMP(48bit|6bytes)][COUNTER(4bit|.5byte)][ENV-ID(4bit|.5byte)]``"""
+        return cls.from_interfaces(ULIDTimestamp(), ULIDRandomness.short_env_lexical())
 
 
 MIN_TIMESTAMP: ULIDTimestamp = ULIDTimestamp.from_bytes(b'\x00\x00\x00\x00\x00\x00')  # 0
