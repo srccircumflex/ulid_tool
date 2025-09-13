@@ -372,6 +372,29 @@ class ULID(_ULIDInterface):
         return cls.from_interfaces(ULIDTimestamp(), ULIDRandomness.short_env_lexical())
 
 
+class SLIDRandomness(ULIDRandomness):
+    prime: _bytes
+    n: _int = 2
+
+    def __init__(self):  # noqa: super().__init__() missed
+        self.int = lexical_rand.slid_next()
+
+    @property
+    def codec(self) -> _bytes:
+        return f"{hex(self.int)[2:].upper():0>4}".encode()
+
+    @codec.setter
+    def codec(self, val: _bytes):
+        self.int = int(val, 16)
+
+
+class SLID(ULID):
+
+    def __init__(self):  # noqa: super().__init__() missed
+        self.timestamp = ULIDTimestamp()
+        self.randomness = SLIDRandomness()
+
+
 MIN_TIMESTAMP: ULIDTimestamp = ULIDTimestamp.from_bytes(b'\x00\x00\x00\x00\x00\x00')  # 0
 MAX_TIMESTAMP: ULIDTimestamp = ULIDTimestamp.from_bytes(b'\xff\xff\xff\xff\xff\xff')  # 281,474,976,710,655
 MIN_RANDOMNESS: ULIDRandomness = ULIDRandomness.from_bytes(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')  # 0

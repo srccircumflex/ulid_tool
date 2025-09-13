@@ -13,6 +13,8 @@ from pathlib import Path
 
 import filelock
 
+_THIS_FOLDER = Path(__file__).parent
+
 LOCAL_FILE = Path(__file__).parent / ".lexical_rand.cache"
 MAX_RAND = 1208925819614629174706175
 
@@ -20,7 +22,6 @@ ENV_LOCK_FILE = Path(__file__).parent / ".env-lock"
 
 ENV_FILE = Path(__file__).parent / ".lexical_env.cache"
 T_ENV_FILE = Path(__file__).parent / ".thread_env.cache"
-
 MAX_ENV = 255
 MAX_ENV_RAND = 4722366482869645213695
 
@@ -28,71 +29,42 @@ S_ENV_FILE = Path(__file__).parent / ".short_env.cache"
 MAX_S_ENV = 15
 MAX_S_ENV_RAND = 15
 
+SLID_ENV_FILE = Path(__file__).parent / ".slid_env.cache"
+MAX_SLID_ENV = 255
+MAX_SLID_ENV_RAND = 255
+
 
 __lock__ = filelock.FileLock(ENV_LOCK_FILE)
 
 
-def __env_gen():
+def __env_gen(
+        env_file_path: Path,
+        max_env: int,
+        max_rand: int,
+        shift: int,
+):
     # [ENV-ID(8bit)][COUNTER(72bit)]
     with __lock__:
         try:
-            with open(ENV_FILE, "r+") as f:
+            with open(env_file_path, "r+") as f:
                 env_id = int(f.read()) + 1
-                if env_id > MAX_ENV:
+                if env_id > max_env:
                     env_id = 0
                 f.seek(0)
                 f.write(str(env_id))
                 f.truncate()
         except FileNotFoundError:
             env_id = 0
-            with open(ENV_FILE, "w") as f:
+            with open(env_file_path, "w") as f:
                 f.write("0")
-    env_id <<= 72
+    env_id <<= shift
     while True:
-        for i in range(MAX_ENV_RAND + 1):
+        for i in range(max_rand + 1):
             yield env_id | i
 
 
-def __t_env_gen():
-    # [ENV-ID(8bit)][COUNTER(72bit)]
-    with __lock__:
-        try:
-            with open(T_ENV_FILE, "r+") as f:
-                env_id = int(f.read()) + 1
-                if env_id > MAX_ENV:
-                    env_id = 0
-                f.seek(0)
-                f.write(str(env_id))
-                f.truncate()
-        except FileNotFoundError:
-            env_id = 0
-            with open(T_ENV_FILE, "w") as f:
-                f.write("0")
-    env_id <<= 72
-    while True:
-        for i in range(MAX_ENV_RAND + 1):
-            yield env_id | i
 
 
-def __s_env_gen():
-    # [ENV-ID(4bit)][COUNTER(4bit)]
-    with __lock__:
-        try:
-            with open(S_ENV_FILE, "r+") as f:
-                s_env_id = int(f.read()) + 1
-                if s_env_id > MAX_S_ENV:
-                    s_env_id = 0
-                f.seek(0)
-                f.write(str(s_env_id))
-                f.truncate()
-        except FileNotFoundError:
-            s_env_id = 0
-            with open(S_ENV_FILE, "w") as f:
-                f.write("0")
-    s_env_id <<= 4
-    while True:
-        for i in range(MAX_S_ENV_RAND + 1):
-            yield s_env_id | i
 
 
 def __runtime_gen():
@@ -126,8 +98,9 @@ def __local_gen():
 
 __runtime_gen__ = __runtime_gen()
 __local_gen__ = __local_gen()
-__env_gen__ = __env_gen()
-__s_env_gen__ = __s_env_gen()
+__env_gen__ = __env_gen(ENV_FILE, MAX_ENV, MAX_ENV_RAND, 72)
+__s_env_gen__ = __env_gen(S_ENV_FILE, MAX_S_ENV, MAX_S_ENV_RAND, 4)
+__slid_env_gen__ = __env_gen(SLID_ENV_FILE, MAX_SLID_ENV, MAX_SLID_ENV_RAND, 8)
 
 
 def runtime_next() -> int:
@@ -152,7 +125,7 @@ def thread_env_next() -> int:
     """``[ENV-ID(8bit)][COUNTER(72bit)]``"""
     i = threading.get_ident()
     if not (gen := __t_env_gens__.get(i)):
-        gen = __t_env_gen()
+        gen = __env_gen(T_ENV_FILE, MAX_ENV, MAX_ENV_RAND, 72)
         __t_env_gens__[i] = gen
     return next(gen)
 
@@ -160,4 +133,9 @@ def thread_env_next() -> int:
 def short_env_next() -> int:
     """``[ENV-ID(4bit)][COUNTER(4bit)]``"""
     return next(__s_env_gen__)
+
+
+def slid_next() -> int:
+    """``[ENV-ID(8bit)][COUNTER(8bit)]``"""
+    return next(__slid_env_gen__)
 

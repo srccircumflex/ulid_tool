@@ -2,7 +2,13 @@
 python3 -m pip install ulid_tool --upgrade
 ```
 
+
 # Tool for Unique Lexicographically Identifier (ULID)
+
+
+> \>>> [**SLID**](#Short-Unique-Lexicographically-Identifier-SLID) 
+> (A shorter, meaningful ID inspired by ULID (included in this package)) <<<
+
 
 ### [Original title] Unique Lexicographically Sortable Identifier
 
@@ -120,7 +126,39 @@ interpreter start + 4 bits from a monotonic counter.
 **Not sub-thread or sub-process safe.** However, for up to 16 simultaneously running main processes.
 
 
-## Module usages
+
+# Short Unique Lexicographically Identifier (SLID)
+
+SLID is based on the fundamental concept of ULID.
+
+The timestamp is identical to that of ULID. 
+The random part has been reduced to 2 bytes, 
+consisting of an uniquely read ID per 
+interpreter start (first byte) and a 
+monotonic counter (second byte). Unlike ULID, 
+where this part is also encoded with base32 
+for strings, in SLID the value is simply given 
+in hexadecimal for better readability.
+
+A SLID has a fixed length of 64 bits coded in 8 bytes/octets and consists of
+2 components. Each component is coded in big-endian
+format (network byte order).
+
+```
+      0                   1                   2                   3
+      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     |               |               |               |               |
+     +---------------------------------------------------------------+
+     | ms since epoch                                                |
+     + - - - - - - - - - - - - - - - +-------------------------------+
+     | ...                           | randomnes                     |
+     +-------------------------------+-------------------------------+
+```
+
+**Not sub-thread or sub-process safe.** However, for up to 256 simultaneously running main processes.
+
+
+# Module usages
 
 ```python
 if bypass_checks:
@@ -128,9 +166,9 @@ if bypass_checks:
     # To bypass this, the following code can be used
     import ulid_tool
     ulid_tool.SYSTEM_CHECKS = False
-    from ulid_tool.ulid import ULID
+    from ulid_tool.ulid import ULID, SLID
 else:
-    from ulid_tool.ulid import ULID
+    from ulid_tool.ulid import ULID, SLID
 
 # ULID of ORIGINAL SPECIFICATION
 ulid = ULID()
@@ -141,6 +179,8 @@ ULID.local_lexical()
 ULID.env_lexical()
 ULID.thread_env_lexical()
 ULID.short_env_lexical()
+## SLID
+SLID()
 
 # INTERFACES
 
@@ -178,3 +218,5 @@ assert ulid.copy().this_backwards(n=1) == ulid.previous
 ulid.igenerator(ni=3)
 reversed(ulid.igenerator(ni=3))
 ```
+
+
