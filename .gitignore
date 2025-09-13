@@ -168,6 +168,8 @@ cython_debug/
 .utils/
 dev/
 
+/src/ulid_tool/utils/.lock
 /src/ulid_tool/utils/.lexical_rand.cache
 /src/ulid_tool/utils/.lexical_env.cache
-/src/ulid_tool/utils/.lexical_env.lock
+/src/ulid_tool/utils/.thread_env.cache
+/src/ulid_tool/utils/.short_env.cache
