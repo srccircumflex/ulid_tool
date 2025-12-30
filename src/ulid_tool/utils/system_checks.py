@@ -138,4 +138,4 @@ def urandom_implemented() -> bool:
 def not_depr_cryptgenrandom() -> bool:
     if not _py_ge_3_11():
         return not ("win" in platform and platform != "darwin")
-    return False
+    return True
